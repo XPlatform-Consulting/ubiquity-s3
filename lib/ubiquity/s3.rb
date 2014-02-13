@@ -102,13 +102,16 @@ module Ubiquity
       object_key = object_key[1..-1] while object_key.start_with?('/') unless object_key.empty?
       raise ':object_key must be set and cannot be empty.' unless object_key and !object_key.empty?
 
+      progress_callback = args[:progress_callback_method]
+
       options = process_upload_options(args)
       {
         :path_of_file_to_upload => path_of_file_to_upload,
         :bucket => bucket,
         :object_key => object_key,
         :options => options,
-        :file_to_upload => File.open(path_of_file_to_upload)
+        :file_to_upload => File.open(path_of_file_to_upload),
+        :progress_callback => progress_callback,
       }
     end
 
@@ -145,6 +148,8 @@ module Ubiquity
     def upload_multipart(args = { })
       upload_args = args[:skip_arguments_processing] ? args : process_common_upload_arguments(args)
 
+      progress_callback = args[:progress_callback_method]
+
       response = storage.initiate_multipart_upload(upload_args[:bucket], upload_args[:object_key], upload_args[:options])
       upload_id = response.body['UploadId']
 
@@ -161,12 +166,15 @@ module Ubiquity
       while (chunk = file.read(multipart_chunk_size)) do
         part_counter += 1
         logger.debug { "Uploading Part #{part_counter} of #{total_parts}" }
+
+        progress_callback.call(nil, "Uploading Part #{part_counter} of #{total_parts}", ((total_parts/part_counter) * 100)) if progress_callback
+
         md5 = Base64.encode64(Digest::MD5.digest(chunk)).strip
         part_upload_start = Time.now
         part_upload = storage.upload_part(upload_args[:bucket], upload_args[:object_key], upload_id, part_tags.size + 1, chunk, 'Content-MD5' => md5 )
         part_upload_end = Time.now
         part_upload_took = part_upload_end - part_upload_start
-        logger.debug { "#{multipart_chunk_size} took #{part_upload_took.round(2)} seconds. #{(multipart_chunk_size/part_upload_took).round(0)} Bps."}
+        logger.debug { "#{multipart_chunk_size} took #{part_upload_took.round(2)} seconds. #{(multipart_chunk_size/part_upload_took).round(0)} Bps." }
         part_tags << part_upload.headers['ETag']
         file_upload_start ||= part_upload_start
         file_upload_end = part_upload_end
