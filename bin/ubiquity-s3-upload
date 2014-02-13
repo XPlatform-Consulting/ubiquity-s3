@@ -1,0 +1,54 @@
+#!/usr/bin/env ruby
+#require 'ubiquity/s3/upload/cli'
+#Ubiquity::S3::Upload::CLI.run
+
+git_path = File.expand_path('../../.git', __FILE__)
+if File.exist?(git_path)
+  lib_path = File.expand_path('../../lib', __FILE__)
+  $:.unshift(lib_path) unless $:.include?(lib_path)
+end
+
+require 'json'
+require 'optparse'
+require 'ubiquity/s3'
+
+params = { }
+
+op = OptionParser.new
+op.on('--aws-key KEY', 'The Amazon Web Services (AWS) Access Key ID.') { |v| params[:aws_key] = v }
+op.on('--aws-secret SECRET', 'The AWS Secret Access Key.') { |v| params[:aws_secret] = v }
+op.on('--aws-region REGION', 'The AWS Region to access.') { |v| params[:aws_region] = v }
+op.on('--bucket NAME', 'The name of the bucket to save the file to.') { |v| params[:bucket] = v }
+op.on('--object-key KEY', 'The unique name to use when saving the file to the bucket.') { |v| params[:object_key] = v }
+op.on('--file-to-upload PATH', 'The path of the file to upload.') { |v| params[:path_of_file_to_upload] = v }
+op.on('--[no-]use-multipart-upload', 'Determines if multipart upload will be used to upload the file') { |v| params[:use_multipart_upload] = v }
+
+default_params = params.dup
+
+params.clear
+op.parse!(ARGV.dup)
+params_from_command_line = params.dup
+
+params.clear
+op.load
+params_from_options_file = params.dup
+
+params = default_params.merge(params_from_options_file)
+params.merge!(params_from_command_line)
+
+#response = Ubiquity::S3.upload(params)
+s3 = Ubiquity::S3.new(params)
+response = s3.upload(params)
+require 'pp'
+response_body = response.data[:body]
+#pp response_body
+#bucket_name = response_body['Bucket']
+#object_key = response_body['Key']
+##puts "BN: #{bucket_name} OK: #{object_key}"
+#sleep 10
+#s3_object = s3.get_file_head(bucket_name, object_key)
+#
+#response_body['File'] = s3_object.inspect
+
+puts JSON.generate(response_body)
+
