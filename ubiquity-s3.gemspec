@@ -12,8 +12,8 @@ Gem::Specification.new do |spec|
   spec.summary       = %q{A library to interact with Amazon S3.}
   spec.description   = %q{}
 
-  spec.required_ruby_version     = '>= 1.9.3'
-  spec.required_rubygems_version = '>= 1.3.6'
+  spec.required_ruby_version     = '>= 1.8.7'
+  #spec.required_rubygems_version = '>= 1.3.6'
 
   spec.files         = `git ls-files -z`.split("\x0")
   spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})
