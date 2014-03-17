@@ -146,11 +146,10 @@ module Ubiquity
     # @option args [String] :path_of_file_to_upload
     # @option args []
     def upload(args = { })
-      upload_args = process_common_upload_arguments(args)
-
       if args[:use_multipart_upload]
-        response = upload_multipart(upload_args.merge(:skip_arguments_processing => true))
+        response = upload_multipart(args)
       else
+        upload_args = process_common_upload_arguments(args)
 
         file_size = upload_args[:file_to_upload].size
         file_upload_start = Time.now
@@ -163,7 +162,7 @@ module Ubiquity
     end
 
     def upload_multipart(args = { })
-      upload_args = args[:skip_arguments_processing] ? args : process_common_upload_arguments(args)
+      upload_args = process_common_upload_arguments(args)
 
       progress_callback = args[:progress_callback_method]
       file = upload_args[:file_to_upload]
