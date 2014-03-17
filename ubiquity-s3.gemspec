@@ -23,6 +23,8 @@ Gem::Specification.new do |spec|
 
   #spec.add_dependency 'ubiquity'
   spec.add_dependency 'fog', '~> 1.19'
-  spec.add_development_dependency 'rspec', '~> 2.99.0.beta1'
+  spec.add_dependnecy 'nokogiri', '~>1.5.0'
+
+  #spec.add_development_dependency 'rspec', '~> 2.99.0.beta1'
 
 end
