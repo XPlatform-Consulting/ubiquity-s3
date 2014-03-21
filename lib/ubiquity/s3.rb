@@ -127,6 +127,22 @@ module Ubiquity
     end
 
     # @param [Hash] args
+    # @option args [String] :bucket_name
+    # @option args [Boolean] :delete_files
+    def delete_bucket(args = { })
+      bucket_name = args[:bucket_name]
+      raise ArgumentError, ':bucket_name must be set and cannot be empty.' unless bucket_name.respond_to?(:empty?) and !bucket_name.empty?
+
+      delete_files = args[:delete_files]
+
+      if delete_files
+        files = storage.directories.get(bucket_name).files.map { |file| file.key }
+        storage.delete_multiple_objects(bucket_name, files) unless files.empty?
+      end
+      storage.delete_bucket(bucket_name)
+    end
+
+    # @param [Hash] args
     # @option args [String] :bucket_name The name of the bucket that the file to delete is located in.
     # @option args [String] :object_key The name of the file to delete.
     def delete_object(args = { })
@@ -163,12 +179,15 @@ module Ubiquity
 
     def upload_multipart(args = { })
       upload_args = process_common_upload_arguments(args)
+      bucket_name     = upload_args[:bucket_name]
+      object_key      = upload_args[:object_key]
+      upload_options  = upload_args[:options]
 
       progress_callback = args[:progress_callback_method]
       file = upload_args[:file_to_upload]
       _multipart_chunk_size = args[:multipart_chunk_size] || multipart_chunk_size
 
-      response = storage.initiate_multipart_upload(upload_args[:bucket], upload_args[:object_key], upload_args[:options])
+      response = storage.initiate_multipart_upload(bucket_name, object_key, upload_options)
       upload_id = response.body['UploadId']
 
       part_tags = []
@@ -188,7 +207,7 @@ module Ubiquity
 
         md5 = Base64.encode64(Digest::MD5.digest(chunk)).strip
         part_upload_start = Time.now
-        part_upload = storage.upload_part(upload_args[:bucket], upload_args[:object_key], upload_id, part_tags.size + 1, chunk, 'Content-MD5' => md5 )
+        part_upload = storage.upload_part(bucket_name, object_key, upload_id, part_tags.size + 1, chunk, 'Content-MD5' => md5 )
         part_upload_end = Time.now
         part_upload_took = part_upload_end - part_upload_start
         logger.debug { "#{_multipart_chunk_size} took #{part_upload_took.round(2)} seconds. #{(_multipart_chunk_size / part_upload_took).round(0)} Bps." }
@@ -199,10 +218,10 @@ module Ubiquity
       file_upload_took = file_upload_end - file_upload_start
       logger.debug { "Uploaded #{file_size} bytes in #{file_upload_took.round(2)} seconds. #{(file_size/file_upload_took).round(0)} Bps" }
     rescue
-      storage.abort_multipart_upload(upload_args[:bucket], upload_args[:object_key], upload_id) if upload_id
+      storage.abort_multipart_upload(bucket_name, object_key, upload_id) if upload_id
       raise
     else
-      return storage.complete_multipart_upload(upload_args[:bucket], upload_args[:object_key], upload_id, part_tags)
+      return storage.complete_multipart_upload(bucket_name, object_key, upload_id, part_tags)
     end
 
     def upload_multipart_threaded(args = { })
