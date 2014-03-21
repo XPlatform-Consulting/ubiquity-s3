@@ -14,18 +14,28 @@ module Ubiquity
     # Set the size of the file split
     DEFAULT_MULTIPART_CHUNK_SIZE = 5242880 # (5 * 1024 * 1024)
 
+    DEFAULT_AWS_REGION = 'us-east-1'
 
     def initialize(args = { })
       initialize_logger(args)
       initialize_storage(args)
     end
 
+    # @param [Hash] args
+    # @option args [Logger]     :logger A logger to be used
+    # @option args [IO, String] :log_to An IO device or file to log to
+    # @option args [Integer]    :log_level (Logger::DEBUG) The logging level to bet set to the logger
     def initialize_logger(args = { })
       @logger = args[:logger] ||= Logger.new(args[:log_to] ||= STDERR)
       logger.level = (log_level = args[:log_level]) ? log_level : Logger::DEBUG
       args[:logger] = logger
     end
 
+    # @param [Hash] args
+    # @option args [String] :aws_key The Amazon Web Services (AWS) access key
+    # @option args [String] :aws_secret The AWS secret key
+    # @option args [String] :aws_region ('us-east-1') The AWS Region
+    # @option args [String] :default_bucket_name The default bucket name to use for operations that support it
     def initialize_storage(args = { })
       aws_key = args[:aws_key]
       raise ':aws_key is required to initialize a connection.' unless aws_key
@@ -33,10 +43,10 @@ module Ubiquity
       aws_secret = args[:aws_secret]
       raise ':aws_secret is required to initialize a connection.' unless aws_secret
 
-      aws_region = args[:aws_region] || 'us-east-1'
+      aws_region = args[:aws_region] || DEFAULT_AWS_REGION
       #raise ':aws_region is required to initialize a connection.' unless aws_region
 
-      @default_bucket_name = args[:default_bucket_name] || args[:default_bucket_name]
+      @default_bucket_name = args[:default_bucket_name] || args[:default_bucket]
 
       @storage = Fog::Storage.new({
         :provider => 'AWS',
@@ -127,8 +137,9 @@ module Ubiquity
     end
 
     # @param [Hash] args
-    # @option args [String] :bucket_name
-    # @option args [Boolean] :delete_files
+    # @option args [String] :bucket_name The name of the bucket to be deleted
+    # @option args [Boolean] :delete_files Determines a search and deletion of existing files will be executed before
+    # the attempt to the delete the bucket
     def delete_bucket(args = { })
       bucket_name = args[:bucket_name]
       raise ArgumentError, ':bucket_name must be set and cannot be empty.' unless bucket_name.respond_to?(:empty?) and !bucket_name.empty?
@@ -159,8 +170,9 @@ module Ubiquity
     end
 
     # @param [Hash] args
+    # @option args [String] :file_to_upload
     # @option args [String] :path_of_file_to_upload
-    # @option args []
+    # @option args [Boolean] :use_multipart_upload
     def upload(args = { })
       if args[:use_multipart_upload]
         response = upload_multipart(args)
@@ -177,14 +189,20 @@ module Ubiquity
       return response
     end
 
+    # @param [Hash] args
+    # @option args [String] :file_to_upload
+    # @option args [String] :bucket_name
+    # @option args [String] :object_key
+    # @option args [Hash] :options
+    # @option args [Method] :progress_callback_method
     def upload_multipart(args = { })
       upload_args = process_common_upload_arguments(args)
+      file            = upload_args[:file_to_upload]
       bucket_name     = upload_args[:bucket_name]
       object_key      = upload_args[:object_key]
       upload_options  = upload_args[:options]
 
       progress_callback = args[:progress_callback_method]
-      file = upload_args[:file_to_upload]
       _multipart_chunk_size = args[:multipart_chunk_size] || multipart_chunk_size
 
       response = storage.initiate_multipart_upload(bucket_name, object_key, upload_options)
@@ -225,7 +243,7 @@ module Ubiquity
     end
 
     def upload_multipart_threaded(args = { })
-
+      raise 'This method has not yet been implemented.'
     end
 
   end
