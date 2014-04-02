@@ -48,12 +48,17 @@ module Ubiquity
 
       @default_bucket_name = args[:default_bucket_name] || args[:default_bucket]
 
-      @storage = Fog::Storage.new({
-        :provider => 'AWS',
-        :aws_access_key_id => aws_key,
-        :aws_secret_access_key => aws_secret,
-        :region => aws_region
-      })
+
+      args_out = {
+          :provider => 'AWS',
+          :aws_access_key_id => aws_key,
+          :aws_secret_access_key => aws_secret,
+          :region => aws_region
+      }
+      #:endpoint, :region, :host, :port, :scheme, :persistent, :use_iam_profile, :aws_session_token, :aws_credentials_expire_at, :path_style
+      Fog::Storage::AWS.recognized.each { |k| args_out[k] = args[k] if args.has_key?(k) }
+
+      @storage = Fog::Storage.new(args_out)
 
       # Don't want to get caught with any timeout errors
       storage.sync_clock
