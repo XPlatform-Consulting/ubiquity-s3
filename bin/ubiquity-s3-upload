@@ -22,7 +22,8 @@ op.on('--bucket NAME', 'The name of the bucket to save the file to.') { |v| para
 op.on('--object-key KEY', 'The unique name to use when saving the file to the bucket.') { |v| params[:object_key] = v }
 op.on('--file-to-upload PATH', 'The path of the file to upload.') { |v| params[:path_of_file_to_upload] = v }
 op.on('--[no-]use-multipart-upload', 'Determines if multipart upload will be used to upload the file') { |v| params[:use_multipart_upload] = v }
-
+op.on('--multipart-chunk-size BYTES', 'Determines the size of each chunk in a multipart upload.') { |v| params[:multipart_chunk_size] = v }
+op.on('--thread-limit NUM', 'Determines the maximum number concurrent of threads to use when performing  a multipart upload. ') { |v| params[:multipart_chunk_size] = v }
 default_params = params.dup
 
 params.clear
@@ -39,7 +40,7 @@ params.merge!(params_from_command_line)
 #response = Ubiquity::S3.upload(params)
 s3 = Ubiquity::S3.new(params)
 response = s3.upload(params)
-require 'pp'
+
 response_body = response.data[:body]
 #pp response_body
 #bucket_name = response_body['Bucket']
