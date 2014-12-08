@@ -1,13 +1,10 @@
 #!/usr/bin/env ruby
 #require 'ubiquity/s3/upload/cli'
 #Ubiquity::S3::Upload::CLI.run
+lib_path = File.expand_path('../../lib', __FILE__)
+$:.unshift(lib_path) unless $:.include?(lib_path)
 
-git_path = File.expand_path('../../.git', __FILE__)
-if File.exist?(git_path)
-  lib_path = File.expand_path('../../lib', __FILE__)
-  $:.unshift(lib_path) unless $:.include?(lib_path)
-end
-
+require 'rubygems'
 require 'json'
 require 'optparse'
 require 'ubiquity/s3'
