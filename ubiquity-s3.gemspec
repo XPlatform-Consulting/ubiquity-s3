@@ -21,9 +21,5 @@ Gem::Specification.new do |spec|
   spec.executables   = spec.files.grep(%r{^bin/}) { |f| File.basename(f) }
   spec.require_paths = ['lib']
 
-  #spec.add_runtime_dependency 'ubiquity'
-  spec.add_runtime_dependency 'nokogiri', '~>1.5.0'
-  spec.add_runtime_dependency 'fog', '~> 1.19'
-  #spec.add_development_dependency 'rspec', '~> 2.99.0.beta1'
-
+  spec.add_runtime_dependency 'fog', '~> 1.20'
 end
