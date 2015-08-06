@@ -29,6 +29,9 @@ Usage: ubiquity-s3-upload [options]
     ./ubiquity-s3-upload --help
     
 ###### General Upload
-    ./ubiquity-s3-upload --aws-key <KEY> --aws-secret <SECRET> --bucket <BUCKET NAME> --file-to-upload "PATH"
+    ./ubiquity-s3-upload --aws-key <KEY> --aws-secret <SECRET> --bucket <BUCKET NAME> --file-to-upload "<PATH>"
+
+###### General Upload with Object Key
+    ./ubiquity-s3-upload --aws-key <KEY> --aws-secret <SECRET> --bucket <BUCKET NAME> --file-to-upload "<PATH>" --object-key "<PATH>"
     
     
